@@ -138,6 +138,14 @@ type Epub struct {
 	lang string
 	// Description
 	desc string
+	// Publisher
+	publisher string
+	// Rights/Copyright
+	rights string
+	// Publication date
+	date string
+	// Subjects/Keywords
+	subjects []string
 	// Page progression direction
 	ppd string
 	// The package file (package.opf)
@@ -535,6 +543,61 @@ func (e *Epub) SetDescription(desc string) {
 	defer e.Unlock()
 	e.desc = desc
 	e.pkg.setDescription(desc)
+}
+
+// SetPublisher sets the publisher of the EPUB.
+func (e *Epub) SetPublisher(publisher string) {
+	e.Lock()
+	defer e.Unlock()
+	e.publisher = publisher
+	e.pkg.setPublisher(publisher)
+}
+
+// Publisher returns the publisher of the EPUB.
+func (e *Epub) Publisher() string {
+	return e.publisher
+}
+
+// SetRights sets the copyright/rights statement of the EPUB.
+// Ex: "© 2025 Author Name. All Rights Reserved."
+func (e *Epub) SetRights(rights string) {
+	e.Lock()
+	defer e.Unlock()
+	e.rights = rights
+	e.pkg.setRights(rights)
+}
+
+// Rights returns the copyright/rights statement of the EPUB.
+func (e *Epub) Rights() string {
+	return e.rights
+}
+
+// SetDate sets the publication date of the EPUB.
+// The date should be in ISO 8601 format (e.g., "2025-01-01" or "2025-01-01T00:00:00Z").
+func (e *Epub) SetDate(date string) {
+	e.Lock()
+	defer e.Unlock()
+	e.date = date
+	e.pkg.setDate(date)
+}
+
+// Date returns the publication date of the EPUB.
+func (e *Epub) Date() string {
+	return e.date
+}
+
+// SetSubjects sets the subjects/keywords of the EPUB.
+// These are used for categorization and discoverability in ebook stores.
+func (e *Epub) SetSubjects(subjects []string) {
+	e.Lock()
+	defer e.Unlock()
+	e.subjects = subjects
+	e.pkg.setSubjects(subjects)
+}
+
+// Subjects returns the subjects/keywords of the EPUB.
+func (e *Epub) Subjects() []string {
+	return e.subjects
 }
 
 // SetPpd sets the page progression direction of the EPUB.

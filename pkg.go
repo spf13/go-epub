@@ -62,6 +62,13 @@ type pkgCreator struct {
 	Data    string   `xml:",chardata"`
 }
 
+// <dc:subject>, for keywords/categories
+// Ex: <dc:subject>Fiction</dc:subject>
+type pkgSubject struct {
+	XMLName xml.Name `xml:"dc:subject"`
+	Data    string   `xml:",chardata"`
+}
+
 // <dc:identifier>, where the unique identifier is stored
 // Ex: <dc:identifier id="pub-id">urn:uuid:fe93046f-af57-475a-a0cb-a0d4bc99ba6d</dc:identifier>
 type pkgIdentifier struct {
@@ -111,8 +118,15 @@ type pkgMetadata struct {
 	// Ex: <dc:language>en</dc:language>
 	Language    string `xml:"dc:language"`
 	Description string `xml:"dc:description,omitempty"`
-	Creator     *pkgCreator
-	Meta        []pkgMeta `xml:"meta"`
+	// Ex: <dc:publisher>Publisher Name</dc:publisher>
+	Publisher string `xml:"dc:publisher,omitempty"`
+	// Ex: <dc:rights>© 2025 Author Name. All Rights Reserved.</dc:rights>
+	Rights string `xml:"dc:rights,omitempty"`
+	// Ex: <dc:date>2025-01-01</dc:date>
+	Date     string       `xml:"dc:date,omitempty"`
+	Subjects []pkgSubject `xml:"dc:subject,omitempty"`
+	Creator  *pkgCreator
+	Meta     []pkgMeta `xml:"meta"`
 }
 
 // The <spine> element
@@ -198,6 +212,25 @@ func (p *pkg) setLang(lang string) {
 
 func (p *pkg) setDescription(desc string) {
 	p.xml.Metadata.Description = desc
+}
+
+func (p *pkg) setPublisher(publisher string) {
+	p.xml.Metadata.Publisher = publisher
+}
+
+func (p *pkg) setRights(rights string) {
+	p.xml.Metadata.Rights = rights
+}
+
+func (p *pkg) setDate(date string) {
+	p.xml.Metadata.Date = date
+}
+
+func (p *pkg) setSubjects(subjects []string) {
+	p.xml.Metadata.Subjects = nil
+	for _, s := range subjects {
+		p.xml.Metadata.Subjects = append(p.xml.Metadata.Subjects, pkgSubject{Data: s})
+	}
 }
 
 func (p *pkg) setPpd(direction string) {
