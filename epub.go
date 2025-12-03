@@ -600,6 +600,36 @@ func (e *Epub) Subjects() []string {
 	return e.subjects
 }
 
+// SetSource sets the source URL of the EPUB.
+// This is used to reference the original source of the content (e.g., Project Gutenberg URL).
+// Ex: "https://www.gutenberg.org/ebooks/11"
+func (e *Epub) SetSource(source string) {
+	e.Lock()
+	defer e.Unlock()
+	e.pkg.setSource(source)
+}
+
+// AddContributor adds a contributor (editor, illustrator, etc.) to the EPUB.
+// The role should be a MARC relator code (e.g., "edt" for editor, "ill" for illustrator).
+// Common roles: "edt" (editor), "ill" (illustrator), "trl" (translator), "aui" (author of introduction)
+func (e *Epub) AddContributor(name string, role string) {
+	e.Lock()
+	defer e.Unlock()
+	e.pkg.addContributor(name, role)
+}
+
+// AddMeta adds a generic <meta> element to the EPUB's package file.
+// This is useful for accessibility metadata, schema.org properties, and other custom metadata.
+// Examples:
+//   - e.AddMeta("schema:accessMode", "textual")
+//   - e.AddMeta("schema:accessibilityFeature", "structuralNavigation")
+//   - e.AddMeta("schema:accessibilitySummary", "This publication conforms to WCAG 2.0 Level AA.")
+func (e *Epub) AddMeta(property string, value string) {
+	e.Lock()
+	defer e.Unlock()
+	e.pkg.addMeta(property, value)
+}
+
 // SetPpd sets the page progression direction of the EPUB.
 func (e *Epub) SetPpd(direction string) {
 	e.Lock()

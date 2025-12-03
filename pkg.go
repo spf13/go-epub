@@ -62,6 +62,14 @@ type pkgCreator struct {
 	Data    string   `xml:",chardata"`
 }
 
+// <dc:contributor>, for editors, illustrators, etc.
+// Ex: <dc:contributor id="editor">Jane Smith</dc:contributor>
+type pkgContributor struct {
+	XMLName xml.Name `xml:"dc:contributor"`
+	ID      string   `xml:"id,attr,omitempty"`
+	Data    string   `xml:",chardata"`
+}
+
 // <dc:subject>, for keywords/categories
 // Ex: <dc:subject>Fiction</dc:subject>
 type pkgSubject struct {
@@ -123,10 +131,13 @@ type pkgMetadata struct {
 	// Ex: <dc:rights>© 2025 Author Name. All Rights Reserved.</dc:rights>
 	Rights string `xml:"dc:rights,omitempty"`
 	// Ex: <dc:date>2025-01-01</dc:date>
-	Date     string       `xml:"dc:date,omitempty"`
-	Subjects []pkgSubject `xml:"dc:subject,omitempty"`
-	Creator  *pkgCreator
-	Meta     []pkgMeta `xml:"meta"`
+	Date string `xml:"dc:date,omitempty"`
+	// Ex: <dc:source>https://www.gutenberg.org/ebooks/11</dc:source>
+	Source       string           `xml:"dc:source,omitempty"`
+	Subjects     []pkgSubject     `xml:"dc:subject,omitempty"`
+	Creator      *pkgCreator
+	Contributors []pkgContributor `xml:"dc:contributor,omitempty"`
+	Meta         []pkgMeta        `xml:"meta"`
 }
 
 // The <spine> element
@@ -231,6 +242,29 @@ func (p *pkg) setSubjects(subjects []string) {
 	for _, s := range subjects {
 		p.xml.Metadata.Subjects = append(p.xml.Metadata.Subjects, pkgSubject{Data: s})
 	}
+}
+
+func (p *pkg) setSource(source string) {
+	p.xml.Metadata.Source = source
+}
+
+func (p *pkg) addContributor(name string, id string) {
+	c := pkgContributor{
+		ID:   id,
+		Data: name,
+	}
+	p.xml.Metadata.Contributors = append(p.xml.Metadata.Contributors, c)
+}
+
+// addMeta adds a generic <meta> element to the package file.
+// This is useful for accessibility metadata and other custom properties.
+// Ex: <meta property="schema:accessMode">textual</meta>
+func (p *pkg) addMeta(property string, value string) {
+	m := pkgMeta{
+		Property: property,
+		Data:     value,
+	}
+	p.xml.Metadata.Meta = append(p.xml.Metadata.Meta, m)
 }
 
 func (p *pkg) setPpd(direction string) {
