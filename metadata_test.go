@@ -220,3 +220,111 @@ func TestEpubCompleteMetadata(t *testing.T) {
 
 	cleanup(testEpubFilename, tempDir)
 }
+
+func TestEpubSetCollection(t *testing.T) {
+	e, err := NewEpub(testEpubTitle)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Set collection/series metadata
+	e.SetCollection("Harry Potter", "series", 1)
+
+	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
+
+	contents, err := storage.ReadFile(filesystem, filepath.Join(tempDir, contentFolderName, pkgFilename))
+	if err != nil {
+		t.Errorf("Unexpected error reading package file: %s", err)
+	}
+
+	contentStr := string(contents)
+
+	// Check for belongs-to-collection with ID (attribute order may vary in XML)
+	if !strings.Contains(contentStr, `property="belongs-to-collection"`) ||
+		!strings.Contains(contentStr, `id="collection-1"`) ||
+		!strings.Contains(contentStr, `>Harry Potter</meta>`) {
+		t.Errorf(
+			"Collection element not found in package file\n"+
+				"Looking for belongs-to-collection with Harry Potter\n"+
+				"In: %s",
+			contentStr)
+	}
+
+	// Check for collection-type refinement
+	expectedType := `<meta refines="#collection-1" property="collection-type">series</meta>`
+	if !strings.Contains(contentStr, expectedType) {
+		t.Errorf(
+			"Collection type refinement not found in package file\n"+
+				"Looking for: %s\n"+
+				"In: %s",
+			expectedType,
+			contentStr)
+	}
+
+	// Check for group-position refinement
+	expectedPosition := `<meta refines="#collection-1" property="group-position">1</meta>`
+	if !strings.Contains(contentStr, expectedPosition) {
+		t.Errorf(
+			"Group position refinement not found in package file\n"+
+				"Looking for: %s\n"+
+				"In: %s",
+			expectedPosition,
+			contentStr)
+	}
+
+	cleanup(testEpubFilename, tempDir)
+}
+
+func TestEpubSetCollectionWithoutPosition(t *testing.T) {
+	e, err := NewEpub(testEpubTitle)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Set collection without position (for unordered collections)
+	e.SetCollection("Classic Literature Collection", "set", 0)
+
+	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
+
+	contents, err := storage.ReadFile(filesystem, filepath.Join(tempDir, contentFolderName, pkgFilename))
+	if err != nil {
+		t.Errorf("Unexpected error reading package file: %s", err)
+	}
+
+	contentStr := string(contents)
+
+	// Check for belongs-to-collection (attribute order may vary in XML)
+	if !strings.Contains(contentStr, `property="belongs-to-collection"`) ||
+		!strings.Contains(contentStr, `id="collection-1"`) ||
+		!strings.Contains(contentStr, `>Classic Literature Collection</meta>`) {
+		t.Errorf(
+			"Collection element not found in package file\n"+
+				"Looking for belongs-to-collection with Classic Literature Collection\n"+
+				"In: %s",
+			contentStr)
+	}
+
+	// Check for collection-type as "set"
+	expectedType := `<meta refines="#collection-1" property="collection-type">set</meta>`
+	if !strings.Contains(contentStr, expectedType) {
+		t.Errorf(
+			"Collection type refinement not found in package file\n"+
+				"Looking for: %s\n"+
+				"In: %s",
+			expectedType,
+			contentStr)
+	}
+
+	// Position should NOT be present when 0
+	unexpectedPosition := `property="group-position"`
+	if strings.Contains(contentStr, unexpectedPosition) {
+		t.Errorf(
+			"Unexpected group-position found in package file when position was 0\n"+
+				"Should not contain: %s\n"+
+				"In: %s",
+			unexpectedPosition,
+			contentStr)
+	}
+
+	cleanup(testEpubFilename, tempDir)
+}

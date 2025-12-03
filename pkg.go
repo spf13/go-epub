@@ -267,6 +267,28 @@ func (p *pkg) addMeta(property string, value string) {
 	p.xml.Metadata.Meta = append(p.xml.Metadata.Meta, m)
 }
 
+// addMetaWithID adds a <meta> element with an ID to the package file.
+// This is needed for elements that will be refined by other meta elements.
+func (p *pkg) addMetaWithID(property string, value string, id string) {
+	m := pkgMeta{
+		Property: property,
+		Data:     value,
+		ID:       id,
+	}
+	p.xml.Metadata.Meta = append(p.xml.Metadata.Meta, m)
+}
+
+// addMetaRefines adds a <meta> element that refines another element.
+// Ex: <meta refines="#collection-id" property="collection-type">series</meta>
+func (p *pkg) addMetaRefines(refines string, property string, value string) {
+	m := pkgMeta{
+		Refines:  refines,
+		Property: property,
+		Data:     value,
+	}
+	p.xml.Metadata.Meta = append(p.xml.Metadata.Meta, m)
+}
+
 func (p *pkg) setPpd(direction string) {
 	p.xml.Spine.Ppd = direction
 }

@@ -630,6 +630,44 @@ func (e *Epub) AddMeta(property string, value string) {
 	e.pkg.addMeta(property, value)
 }
 
+// SetCollection sets the series/collection metadata for the EPUB.
+// This creates EPUB3-compliant belongs-to-collection metadata.
+//
+// Parameters:
+//   - name: The collection/series name (e.g., "Harry Potter")
+//   - collectionType: Either "series" or "set" (series for numbered books, set for unordered)
+//   - position: The position in the series (0 to omit, e.g., 1 for first book)
+//
+// Example output in package.opf:
+//
+//	<meta id="collection-1" property="belongs-to-collection">Harry Potter</meta>
+//	<meta refines="#collection-1" property="collection-type">series</meta>
+//	<meta refines="#collection-1" property="group-position">1</meta>
+func (e *Epub) SetCollection(name string, collectionType string, position int) {
+	e.Lock()
+	defer e.Unlock()
+
+	if name == "" {
+		return
+	}
+
+	collectionID := "collection-1"
+
+	// Add the main collection element with ID
+	e.pkg.addMetaWithID("belongs-to-collection", name, collectionID)
+
+	// Add collection type (series or set)
+	if collectionType == "" {
+		collectionType = "series"
+	}
+	e.pkg.addMetaRefines("#"+collectionID, "collection-type", collectionType)
+
+	// Add position if provided (only for series)
+	if position > 0 {
+		e.pkg.addMetaRefines("#"+collectionID, "group-position", fmt.Sprintf("%d", position))
+	}
+}
+
 // SetPpd sets the page progression direction of the EPUB.
 func (e *Epub) SetPpd(direction string) {
 	e.Lock()
