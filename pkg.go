@@ -133,8 +133,8 @@ type pkgMetadata struct {
 	// Ex: <dc:date>2025-01-01</dc:date>
 	Date string `xml:"dc:date,omitempty"`
 	// Ex: <dc:source>https://www.gutenberg.org/ebooks/11</dc:source>
-	Source       string           `xml:"dc:source,omitempty"`
-	Subjects     []pkgSubject     `xml:"dc:subject,omitempty"`
+	Source       string       `xml:"dc:source,omitempty"`
+	Subjects     []pkgSubject `xml:"dc:subject,omitempty"`
 	Creator      *pkgCreator
 	Contributors []pkgContributor `xml:"dc:contributor,omitempty"`
 	Meta         []pkgMeta        `xml:"meta"`

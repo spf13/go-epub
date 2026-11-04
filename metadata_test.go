@@ -9,16 +9,16 @@ import (
 )
 
 const (
-	testSource          = "https://www.gutenberg.org/ebooks/11"
-	testSourceTemplate  = `<dc:source>%s</dc:source>`
-	testContributor1    = "Jane Smith"
-	testContributor1Role = "edt"
-	testContributor2    = "AI Illustrator"
-	testContributor2Role = "ill"
+	testSource              = "https://www.gutenberg.org/ebooks/11"
+	testSourceTemplate      = `<dc:source>%s</dc:source>`
+	testContributor1        = "Jane Smith"
+	testContributor1Role    = "edt"
+	testContributor2        = "AI Illustrator"
+	testContributor2Role    = "ill"
 	testContributorTemplate = `<dc:contributor id="%s">%s</dc:contributor>`
-	testMetaProperty    = "schema:accessMode"
-	testMetaValue       = "textual"
-	testMetaTemplate    = `<meta property="%s">%s</meta>`
+	testMetaProperty        = "schema:accessMode"
+	testMetaValue           = "textual"
+	testMetaTemplate        = `<meta property="%s">%s</meta>`
 )
 
 func TestEpubSetSource(t *testing.T) {
