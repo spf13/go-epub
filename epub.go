@@ -379,6 +379,7 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 	}
 	x.setTitle(sectionTitle)
 	x.setXmlnsEpub(xmlnsEpub)
+	x.setLang(e.sectionLang())
 
 	if internalCSSPath != "" {
 		x.setCSS(internalCSSPath)
@@ -405,6 +406,46 @@ func (e *Epub) addSection(parentFilename string, body string, sectionTitle strin
 	return internalFilename, nil
 }
 
+// SetSectionPrefix sets the epub:prefix attribute on the root element of a
+// single section, leaving every other document unchanged. The prefix is written
+// verbatim, e.g.:
+//
+//	e.SetSectionPrefix("voices.xhtml", "z3998: http://www.daisy.org/z3998/2012/vocab/structure/")
+//
+// An empty prefix removes the declaration. Sections are matched by their
+// internal filename, including subsections; an ".xhtml" extension is assumed
+// when the filename has none.
+func (e *Epub) SetSectionPrefix(filename string, prefix string) error {
+	e.Lock()
+	defer e.Unlock()
+
+	if filepath.Ext(filename) != ".xhtml" {
+		filename += ".xhtml"
+	}
+
+	s := findSection(e.sections, filename)
+	if s == nil {
+		return fmt.Errorf("section %q does not exist", filename)
+	}
+
+	s.xhtml.setEpubPrefix(prefix)
+	return nil
+}
+
+// findSection returns the section with the given filename, searching
+// subsections as well. It returns nil when no section matches.
+func findSection(sections []*epubSection, filename string) *epubSection {
+	for _, s := range sections {
+		if s.filename == filename {
+			return s
+		}
+		if found := findSection(s.children, filename); found != nil {
+			return found
+		}
+	}
+	return nil
+}
+
 // Author returns the author of the EPUB.
 func (e *Epub) Author() string {
 	return e.author
@@ -417,6 +458,15 @@ func (e *Epub) Identifier() string {
 
 // Lang returns the language of the EPUB.
 func (e *Epub) Lang() string {
+	return e.lang
+}
+
+// sectionLang returns the language to emit on section documents, defaulting to
+// defaultEpubLang when no language has been set.
+func (e *Epub) sectionLang() string {
+	if e.lang == "" {
+		return defaultEpubLang
+	}
 	return e.lang
 }
 
@@ -660,11 +710,11 @@ func (e *Epub) SetCollection(name string, collectionType string, position int) {
 	if collectionType == "" {
 		collectionType = "series"
 	}
-	e.pkg.addMetaRefines("#"+collectionID, "collection-type", collectionType)
+	e.pkg.addMetaRefines("#"+collectionID, "collection-type", "", collectionType)
 
 	// Add position if provided (only for series)
 	if position > 0 {
-		e.pkg.addMetaRefines("#"+collectionID, "group-position", fmt.Sprintf("%d", position))
+		e.pkg.addMetaRefines("#"+collectionID, "group-position", "", fmt.Sprintf("%d", position))
 	}
 }
 

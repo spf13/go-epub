@@ -27,10 +27,13 @@ type xhtml struct {
 
 // This holds the actual XHTML content
 type xhtmlRoot struct {
-	XMLName   xml.Name      `xml:"http://www.w3.org/1999/xhtml html"`
-	XmlnsEpub string        `xml:"xmlns:epub,attr,omitempty"`
-	Head      xhtmlHead     `xml:"head"`
-	Body      xhtmlInnerxml `xml:"body"`
+	XMLName    xml.Name      `xml:"http://www.w3.org/1999/xhtml html"`
+	XmlnsEpub  string        `xml:"xmlns:epub,attr,omitempty"`
+	Lang       string        `xml:"lang,attr,omitempty"`
+	XmlLang    string        `xml:"xml:lang,attr,omitempty"`
+	EpubPrefix string        `xml:"epub:prefix,attr,omitempty"`
+	Head       xhtmlHead     `xml:"head"`
+	Body       xhtmlInnerxml `xml:"body"`
 }
 
 type xhtmlHead struct {
@@ -110,6 +113,17 @@ func (x *xhtml) setTitle(title string) {
 
 func (x *xhtml) setXmlnsEpub(xmlns string) {
 	x.xml.XmlnsEpub = xmlns
+}
+
+// setLang sets both the lang and xml:lang attributes on the document root.
+func (x *xhtml) setLang(lang string) {
+	x.xml.Lang = lang
+	x.xml.XmlLang = lang
+}
+
+// setEpubPrefix sets the epub:prefix attribute on the document root.
+func (x *xhtml) setEpubPrefix(prefix string) {
+	x.xml.EpubPrefix = prefix
 }
 
 func (x *xhtml) Title() string {

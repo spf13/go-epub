@@ -474,6 +474,9 @@ func writeSections(rootEpubDir string, e *Epub, sections []*epubSection, parentf
 		if section.filename == e.cover.xhtmlFilename {
 			section.xhtml.setTitle(e.Title())
 		}
+		// SetLang may be called after sections are added, so the language is
+		// applied again here, right before the document is written.
+		section.xhtml.setLang(e.sectionLang())
 
 		sectionFilePath := filepath.Join(rootEpubDir, contentFolderName, xhtmlFolderName, section.filename)
 		err := section.xhtml.write(sectionFilePath)
