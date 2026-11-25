@@ -85,6 +85,14 @@ func (e *Epub) WriteTo(dst io.Writer) (int64, error) {
 
 	// Must be called after:
 	// createEpubFolders()
+	if e.ibooksSpecifiedFonts {
+		err = writeIbooksDisplayOptionsFile(tempDir)
+		if err != nil {
+			return 0, err
+		}
+	}
+	// Must be called after:
+	// createEpubFolders()
 	err = e.writeCSSFiles(tempDir)
 	if err != nil {
 		return 0, err
@@ -208,6 +216,30 @@ func writeContainerFile(rootEpubDir string) error {
 		filePermissions,
 	); err != nil {
 		return fmt.Errorf("Error writing container file: %w", err)
+	}
+	return nil
+}
+
+// ibooksDisplayOptionsFilename is the Apple Books font declaration file.
+const ibooksDisplayOptionsFilename = "com.apple.ibooks.display-options.xml"
+
+// ibooksDisplayOptionsTemplate declares specified-fonts, without which
+// Apple Books ignores every @font-face declaration in the book.
+const ibooksDisplayOptionsTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+<display_options>
+  <platform name="*">
+    <option name="specified-fonts">true</option>
+  </platform>
+</display_options>
+`
+
+// writeIbooksDisplayOptionsFile writes
+// META-INF/com.apple.ibooks.display-options.xml so embedded fonts apply
+// in Apple Books (iBooks Asset Guide: specified-fonts must be declared).
+func writeIbooksDisplayOptionsFile(rootEpubDir string) error {
+	path := filepath.Join(rootEpubDir, metaInfFolderName, ibooksDisplayOptionsFilename)
+	if err := filesystem.WriteFile(path, []byte(ibooksDisplayOptionsTemplate), filePermissions); err != nil {
+		return fmt.Errorf("Error writing iBooks display options file: %w", err)
 	}
 	return nil
 }

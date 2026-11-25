@@ -1,7 +1,9 @@
 package epub
 
 import (
+	"archive/zip"
 	"encoding/xml"
+	"io"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -178,5 +180,56 @@ func TestSetSectionPrefixMissingSection(t *testing.T) {
 
 	if err := e.SetSectionPrefix("does-not-exist.xhtml", testZ3998Prefix); err == nil {
 		t.Error("Expected an error when setting the prefix of a section that doesn't exist")
+	}
+}
+
+// A book that embeds fonts must carry Apple's display-options declaration,
+// or Apple Books ignores every @font-face; without embedded fonts the file
+// must be absent.
+func TestIbooksDisplayOptionsFollowsFonts(t *testing.T) {
+	write := func(withFile bool) map[string]string {
+		e, err := NewEpub("Book")
+		if err != nil {
+			t.Fatal(err)
+		}
+		e.ibooksSpecifiedFonts = withFile
+		dir := t.TempDir()
+		path := filepath.Join(dir, "book.epub")
+		if err := e.Write(path); err != nil {
+			t.Fatal(err)
+		}
+		zr, err := zip.OpenReader(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer zr.Close()
+		out := map[string]string{}
+		for _, f := range zr.File {
+			rc, err := f.Open()
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, err := io.ReadAll(rc)
+			rc.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			out[f.Name] = string(b)
+		}
+		return out
+	}
+
+	with := write(true)
+	body, ok := with["META-INF/com.apple.ibooks.display-options.xml"]
+	if !ok {
+		t.Fatal("display-options.xml missing from the archive")
+	}
+	if !strings.Contains(body, `<option name="specified-fonts">true</option>`) {
+		t.Errorf("display-options does not declare specified-fonts: %s", body)
+	}
+
+	without := write(false)
+	if _, ok := without["META-INF/com.apple.ibooks.display-options.xml"]; ok {
+		t.Error("display-options.xml present without embedded fonts")
 	}
 }

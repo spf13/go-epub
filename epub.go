@@ -154,6 +154,9 @@ type Epub struct {
 	title    string
 	// Table of contents
 	toc *toc
+	// Whether to write META-INF/com.apple.ibooks.display-options.xml with
+	// specified-fonts enabled
+	ibooksSpecifiedFonts bool
 }
 
 type epubCover struct {
@@ -724,6 +727,17 @@ func (e *Epub) SetPpd(direction string) {
 	defer e.Unlock()
 	e.ppd = direction
 	e.pkg.setPpd(direction)
+}
+
+// SetIbooksSpecifiedFonts controls whether the EPUB carries
+// META-INF/com.apple.ibooks.display-options.xml declaring
+// <option name="specified-fonts">true</option>. Apple Books ignores every
+// @font-face declaration without it, so it belongs exactly with embedded
+// fonts: enabled when fonts ship, absent otherwise.
+func (e *Epub) SetIbooksSpecifiedFonts(enabled bool) {
+	e.Lock()
+	defer e.Unlock()
+	e.ibooksSpecifiedFonts = enabled
 }
 
 // SetTitle sets the title of the EPUB.
