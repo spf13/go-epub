@@ -443,7 +443,9 @@ func (e *Epub) writeSections(rootEpubDir string) {
 func (e *Epub) writeToc(rootEpubDir string) {
 	e.pkg.addToManifest(tocNavItemID, tocNavFilename, mediaTypeXhtml, tocNavItemProperties)
 	e.pkg.addToManifest(tocNcxItemID, tocNcxFilename, mediaTypeNcx, "")
-
+	// Like every content document, nav.xhtml's root carries the EPUB's
+	// language, resolved here so SetLang after NewEpub still lands.
+	e.toc.setLang(e.sectionLang())
 	err := e.toc.write(rootEpubDir)
 	if err != nil {
 		log.Println(err)

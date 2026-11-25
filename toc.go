@@ -62,6 +62,7 @@ type toc struct {
 
 	title  string // EPUB title
 	author string // EPUB author
+	lang   string // language of nav.xhtml's root, like every other document
 }
 
 type tocNavBody struct {
@@ -246,6 +247,12 @@ func (t *toc) setTitle(title string) {
 	t.title = title
 }
 
+// setLang records the language nav.xhtml's root element must carry, the same
+// language every content document's root carries.
+func (t *toc) setLang(lang string) {
+	t.lang = lang
+}
+
 // Write the TOC files
 func (t *toc) write(tempDir string) error {
 	err := t.writeNavDoc(tempDir)
@@ -278,7 +285,7 @@ func (t *toc) writeNavDoc(tempDir string) error {
 		return fmt.Errorf("can't create xhtml for TOC file: %w", err)
 	}
 	n.setXmlnsEpub(xmlnsEpub)
-	n.setTitle(t.title)
+	n.setLang(t.lang)
 
 	navFilePath := filepath.Join(tempDir, contentFolderName, tocNavFilename)
 	err = n.write(navFilePath)
