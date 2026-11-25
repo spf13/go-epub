@@ -24,7 +24,10 @@ const (
 
 	tocNcxFilename = "toc.ncx"
 	tocNcxItemID   = "ncx"
-	tocNcxTemplate = `
+
+	tocNcxMetaUID   = "dtb:uid"
+	tocNcxMetaDepth = "dtb:depth"
+	tocNcxTemplate  = `
 <ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
   <head>
     <meta name="dtb:uid" content="" />
@@ -82,7 +85,7 @@ type tocNavLink struct {
 type tocNcxRoot struct {
 	XMLName xml.Name          `xml:"http://www.daisy.org/z3986/2005/ncx/ ncx"`
 	Version string            `xml:"version,attr"`
-	Meta    tocNcxMeta        `xml:"head>meta"`
+	Meta    []tocNcxMeta      `xml:"head>meta"`
 	Title   string            `xml:"docTitle>text"`
 	Author  string            `xml:"docAuthor>text"`
 	NavMap  []*tocNcxNavPoint `xml:"navMap>navPoint"`
@@ -202,7 +205,41 @@ func (t *toc) addSubSection(parent string, index int, title string, relativePath
 }
 
 func (t *toc) setIdentifier(identifier string) {
-	t.ncxXML.Meta.Content = identifier
+	t.setMeta(tocNcxMetaUID, identifier)
+}
+
+// setMeta updates the NCX <meta> entry with the given name, appending it when
+// it does not exist yet. Existing entries keep their position.
+func (t *toc) setMeta(name string, content string) {
+	for i := range t.ncxXML.Meta {
+		if t.ncxXML.Meta[i].Name == name {
+			t.ncxXML.Meta[i].Content = content
+			return
+		}
+	}
+	t.ncxXML.Meta = append(t.ncxXML.Meta, tocNcxMeta{Name: name, Content: content})
+}
+
+// navPointDepth returns the nesting depth of the navPoint tree, with a minimum
+// of 1. An empty tree still has a depth of 1, per the NCX specification.
+func navPointDepth(points []*tocNcxNavPoint) int {
+	depth := maxNavPointDepth(points)
+	if depth < 1 {
+		return 1
+	}
+	return depth
+}
+
+// maxNavPointDepth returns the deepest nesting level in the tree, and 0 when
+// the tree is empty.
+func maxNavPointDepth(points []*tocNcxNavPoint) int {
+	depth := 0
+	for _, p := range points {
+		if d := 1 + maxNavPointDepth(p.Children); d > depth {
+			depth = d
+		}
+	}
+	return depth
 }
 
 func (t *toc) setTitle(title string) {
@@ -255,6 +292,7 @@ func (t *toc) writeNavDoc(tempDir string) error {
 func (t *toc) writeNcxDoc(tempDir string) error {
 	t.ncxXML.Title = t.title
 	t.ncxXML.Author = t.author
+	t.setMeta(tocNcxMetaDepth, strconv.Itoa(navPointDepth(t.ncxXML.NavMap)))
 
 	ncxFileContent, err := xml.MarshalIndent(t.ncxXML, "", "  ")
 	if err != nil {

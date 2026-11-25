@@ -254,6 +254,12 @@ func (p *pkg) addContributor(name string, id string) {
 		Data: name,
 	}
 	p.xml.Metadata.Contributors = append(p.xml.Metadata.Contributors, c)
+
+	// Declare the contributor's role with a MARC relator refine, the standard
+	// way to say "editor"/"illustrator" in an EPUB 3 package document.
+	if id != "" {
+		p.addMetaRefines("#"+id, pkgAuthorProperty, pkgAuthorScheme, id)
+	}
 }
 
 // addMeta adds a generic <meta> element to the package file.
@@ -280,10 +286,11 @@ func (p *pkg) addMetaWithID(property string, value string, id string) {
 
 // addMetaRefines adds a <meta> element that refines another element.
 // Ex: <meta refines="#collection-id" property="collection-type">series</meta>
-func (p *pkg) addMetaRefines(refines string, property string, value string) {
+func (p *pkg) addMetaRefines(refines string, property string, scheme string, value string) {
 	m := pkgMeta{
 		Refines:  refines,
 		Property: property,
+		Scheme:   scheme,
 		Data:     value,
 	}
 	p.xml.Metadata.Meta = append(p.xml.Metadata.Meta, m)

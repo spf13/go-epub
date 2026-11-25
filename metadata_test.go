@@ -1,6 +1,7 @@
 package epub
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -9,16 +10,17 @@ import (
 )
 
 const (
-	testSource              = "https://www.gutenberg.org/ebooks/11"
-	testSourceTemplate      = `<dc:source>%s</dc:source>`
-	testContributor1        = "Jane Smith"
-	testContributor1Role    = "edt"
-	testContributor2        = "AI Illustrator"
-	testContributor2Role    = "ill"
-	testContributorTemplate = `<dc:contributor id="%s">%s</dc:contributor>`
-	testMetaProperty        = "schema:accessMode"
-	testMetaValue           = "textual"
-	testMetaTemplate        = `<meta property="%s">%s</meta>`
+	testSource                  = "https://www.gutenberg.org/ebooks/11"
+	testSourceTemplate          = `<dc:source>%s</dc:source>`
+	testContributor1            = "Jane Smith"
+	testContributor1Role        = "edt"
+	testContributor2            = "AI Illustrator"
+	testContributor2Role        = "ill"
+	testContributorTemplate     = `<dc:contributor id="%s">%s</dc:contributor>`
+	testContributorRoleTemplate = `<meta refines="#%s" property="role" scheme="marc:relators">%s</meta>`
+	testMetaProperty            = "schema:accessMode"
+	testMetaValue               = "textual"
+	testMetaTemplate            = `<meta property="%s">%s</meta>`
 )
 
 func TestEpubSetSource(t *testing.T) {
@@ -83,6 +85,27 @@ func TestEpubAddContributor(t *testing.T) {
 				"Looking for: %s\n"+
 				"In: %s",
 			testContributor2Element,
+			contents)
+	}
+
+	// Each contributor's MARC relator role is declared by a refine meta element.
+	testContributor1RoleElement := fmt.Sprintf(testContributorRoleTemplate, testContributor1Role, testContributor1Role)
+	if !strings.Contains(string(contents), testContributor1RoleElement) {
+		t.Errorf(
+			"Contributor 1 role refine not found in package file\n"+
+				"Looking for: %s\n"+
+				"In: %s",
+			testContributor1RoleElement,
+			contents)
+	}
+
+	testContributor2RoleElement := fmt.Sprintf(testContributorRoleTemplate, testContributor2Role, testContributor2Role)
+	if !strings.Contains(string(contents), testContributor2RoleElement) {
+		t.Errorf(
+			"Contributor 2 role refine not found in package file\n"+
+				"Looking for: %s\n"+
+				"In: %s",
+			testContributor2RoleElement,
 			contents)
 	}
 
