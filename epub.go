@@ -665,6 +665,7 @@ func (e *Epub) SetSource(source string) {
 // AddContributor adds a contributor (editor, illustrator, etc.) to the EPUB.
 // The role should be a MARC relator code (e.g., "edt" for editor, "ill" for illustrator).
 // Common roles: "edt" (editor), "ill" (illustrator), "trl" (translator), "aui" (author of introduction)
+// Each contributor gets its own generated XML id, so repeated roles stay valid.
 func (e *Epub) AddContributor(name string, role string) {
 	e.Lock()
 	defer e.Unlock()

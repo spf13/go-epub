@@ -63,7 +63,7 @@ type pkgCreator struct {
 }
 
 // <dc:contributor>, for editors, illustrators, etc.
-// Ex: <dc:contributor id="editor">Jane Smith</dc:contributor>
+// Ex: <dc:contributor id="contributor-1">Jane Smith</dc:contributor>
 type pkgContributor struct {
 	XMLName xml.Name `xml:"dc:contributor"`
 	ID      string   `xml:"id,attr,omitempty"`
@@ -248,17 +248,22 @@ func (p *pkg) setSource(source string) {
 	p.xml.Metadata.Source = source
 }
 
-func (p *pkg) addContributor(name string, id string) {
-	c := pkgContributor{
-		ID:   id,
-		Data: name,
+// addContributor appends a dc:contributor and, when role is a MARC relator
+// code, declares that role with a refine. The XML id is generated from the
+// contributor's position: keying it off the role gave two editors the same
+// id="edt", so both refines pointed at one element and package.opf carried
+// duplicate ids (epubcheck RSC-005).
+func (p *pkg) addContributor(name string, role string) {
+	c := pkgContributor{Data: name}
+	if role != "" {
+		c.ID = fmt.Sprintf("contributor-%d", len(p.xml.Metadata.Contributors)+1)
 	}
 	p.xml.Metadata.Contributors = append(p.xml.Metadata.Contributors, c)
 
 	// Declare the contributor's role with a MARC relator refine, the standard
 	// way to say "editor"/"illustrator" in an EPUB 3 package document.
-	if id != "" {
-		p.addMetaRefines("#"+id, pkgAuthorProperty, pkgAuthorScheme, id)
+	if c.ID != "" {
+		p.addMetaRefines("#"+c.ID, pkgAuthorProperty, pkgAuthorScheme, role)
 	}
 }
 
