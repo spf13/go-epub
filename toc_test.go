@@ -141,3 +141,45 @@ func TestTocNcxMetaHeaderWithoutSections(t *testing.T) {
 
 	cleanup(testEpubFilename, tempDir)
 }
+
+// The nav document's <title> must carry the book title. A rewrite that only
+// applied the language attributes silently emptied it, and every reader that
+// shows the TOC title rendered a blank heading.
+func TestTocNavTitle(t *testing.T) {
+	e, err := NewEpub(testEpubTitle)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.AddSection(testSectionBody, testSectionTitle, testSectionFilename, ""); err != nil {
+		t.Fatal(err)
+	}
+
+	// SetTitle is applied at write time, so renaming after the section was
+	// added must still reach nav.xhtml.
+	const updatedTitle = "A Renamed Book"
+	e.SetTitle(updatedTitle)
+
+	tempDir := writeAndExtractEpub(t, e, testEpubFilename)
+
+	navContents, err := storage.ReadFile(filesystem, filepath.Join(tempDir, contentFolderName, tocNavFilename))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var nav struct {
+		Head struct {
+			Title string `xml:"title"`
+		} `xml:"head"`
+	}
+	if err := xml.Unmarshal(navContents, &nav); err != nil {
+		t.Fatalf("nav.xhtml is not well-formed XML: %s\n%s", err, navContents)
+	}
+
+	if nav.Head.Title != updatedTitle {
+		t.Errorf("nav.xhtml title doesn't match the book title\nGot: %q\nExpected: %q\nIn: %s",
+			nav.Head.Title, updatedTitle, navContents)
+	}
+
+	cleanup(testEpubFilename, tempDir)
+}

@@ -286,6 +286,7 @@ func (t *toc) writeNavDoc(tempDir string) error {
 	}
 	n.setXmlnsEpub(xmlnsEpub)
 	n.setLang(t.lang)
+	n.setTitle(t.title)
 
 	navFilePath := filepath.Join(tempDir, contentFolderName, tocNavFilename)
 	err = n.write(navFilePath)
